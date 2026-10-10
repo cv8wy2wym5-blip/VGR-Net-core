@@ -1,0 +1,16 @@
+{
+  "file": "deeplabv3_mobilenet_v3_large_traffic6.pth",
+  "sha256": "bab69c7879288866676fa81615b1551e79ef185bbb1a0e69a00d93ef25f5a465",
+  "architecture": "DeepLabV3 with MobileNetV3-Large",
+  "taxonomy": "traffic6",
+  "class_names": [
+    "background",
+    "car",
+    "bus",
+    "truck",
+    "person",
+    "bicycle",
+    "motorcycle"
+  ],
+  "role": "pretrained semantic-prior checkpoint"
+}

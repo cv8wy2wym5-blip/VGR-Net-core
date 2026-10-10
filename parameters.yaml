@@ -1,0 +1,243 @@
+format_version: 2
+classes:
+- Car
+- Pedestrian
+- Cyclist
+sampling:
+  min_projection_depth: 0.1
+  projection_epsilon: 1.0e-05
+  sampling_mode: bilinear
+  padding_mode: zeros
+  align_corners: false
+normalization:
+  norm_eps: 1.0e-05
+  norm_momentum: 0.1
+modules:
+  dspe:
+    in_channels: 7
+    feat_channels:
+    - 64
+    class_mlp_hidden: 16
+    v_rc_dim_idx: 5
+    rcs_dim_idx: 3
+    v_rc_max: 3.0
+    z_ref: 3.0
+    heatmap_kernel_size: 7
+    heatmap_kernel_sigma: 2.0
+    feature_epsilon: 0.001
+  rasa:
+    radar_channels: 384
+    img_channels: 384
+    num_samples: 8
+    depth_confidence_strength: 0.2
+    depth_reference: 20.0
+    num_scales: 3
+    max_pixel_offset: 20.0
+    patch_size: 3
+    patch_context_dim: 128
+    offset_mlp_hidden: 128
+    diffusion_reduction: 2
+    diffusion_kernel_size: 5
+    diffusion_dilation: 2
+    layer_norm_epsilon: 1.0e-05
+    scatter_min_weight: 1.0
+  hgd:
+    img_channels: 384
+    num_z_levels: 8
+    class_response_epsilon: 1.0e-06
+    prior_log_epsilon: 1.0e-08
+    height_bias_initial_value: 0.0
+datasets:
+  vod:
+    point_cloud_range:
+    - 0
+    - -25.6
+    - -3
+    - 51.2
+    - 25.6
+    - 2
+    pillar_voxel_size:
+    - 0.16
+    - 0.16
+    - 5
+    fusion_voxel_size:
+    - 0.32
+    - 0.32
+    hgd_class_heights:
+    - 1.0
+    - 0.85
+    - 0.9
+    hgd_class_sigmas:
+    - 1.0
+    - 0.5
+    - 0.6
+    caller_preprocessing_reference:
+      max_points_per_pillar: 10
+      max_voxels:
+      - 16000
+      - 40000
+      image_resize_scale: 0.48
+      image_pad_divisor: 32
+      detector_image_normalization:
+        mean:
+        - 147.666
+        - 135.721
+        - 106.998
+        std:
+        - 71.947
+        - 71.02
+        - 66.431
+        to_rgb: false
+      radar_normalization:
+        mean:
+        - 0
+        - 0
+        - 0
+        - -12.339
+        - -2.818
+        - 0.037
+        - 0
+        std:
+        - 1
+        - 1
+        - 1
+        - 13.24
+        - 1.926
+        - 1.929
+        - 1
+  dual_radar:
+    point_cloud_range:
+    - 0.0
+    - -40.96
+    - -3.0
+    - 81.92
+    - 40.96
+    - 1.0
+    pillar_voxel_size:
+    - 0.16
+    - 0.16
+    - 4.0
+    fusion_voxel_size:
+    - 0.32
+    - 0.32
+    hgd_class_heights:
+    - -0.27
+    - -0.29
+    - -0.36
+    hgd_class_sigmas:
+    - 0.5
+    - 0.4
+    - 0.45
+    caller_preprocessing_reference:
+      max_points_per_pillar: 32
+      max_voxels:
+      - 30000
+      - 40000
+      image_resize_scale: 0.48
+      image_pad_divisor: 32
+      detector_image_normalization:
+        mean:
+        - 74.92
+        - 77.448
+        - 77.779
+        std:
+        - 64.557
+        - 60.204
+        - 59.8
+        to_rgb: false
+      radar_normalization:
+        mean:
+        - 0
+        - 0
+        - 0
+        - 0.50148
+        - -8.77501
+        - -8.77501
+        - 0
+        std:
+        - 1
+        - 1
+        - 1
+        - 0.07231
+        - 5.4591
+        - 5.4591
+        - 1
+training_reference:
+  epochs: 60
+  total_batch_size: 8
+  seeds:
+  - 0
+  - 1
+  - 2
+  optimizer:
+    type: AdamW
+    lr: 0.00033
+    weight_decay: 0.01
+  gradient_clip:
+    max_norm: 10
+    norm_type: 2
+  learning_rate_schedule:
+    policy: CosineAnnealing
+    warmup: linear
+    warmup_iters: 1000
+    warmup_ratio: 0.001
+    min_lr_ratio: 0.01
+  momentum_schedule:
+    policy: cyclic
+    target_ratio:
+    - 0.8947368421052632
+    - 1
+    cyclic_times: 1
+    step_ratio_up: 0.4
+  augmentation:
+    horizontal_bev_flip_probability: 0.5
+    post_fusion_rotation_probability: 0.5
+    post_fusion_rotation_max_degrees: 22.5
+radar_input:
+  feature_order:
+  - x
+  - y
+  - z
+  - rcs
+  - radial_velocity
+  - ego_compensated_radial_velocity
+  - time
+  dspe_affinity_velocity_index: 5
+  coordinate_frame: x forward, y left, z up; calibrated to radar2img
+  raw_dataset_conversion_included: false
+semantic_prior:
+  architecture: deeplabv3_mobilenet_v3_large
+  taxonomy: traffic6
+  class_names:
+  - background
+  - car
+  - bus
+  - truck
+  - person
+  - bicycle
+  - motorcycle
+  class_mapping:
+    car:
+    - 1
+    - 2
+    - 3
+    pedestrian:
+    - 4
+    cyclist:
+    - 5
+    - 6
+  checkpoint: weights/deeplabv3_mobilenet_v3_large_traffic6.pth
+  checkpoint_sha256: bab69c7879288866676fa81615b1551e79ef185bbb1a0e69a00d93ef25f5a465
+  rgb_mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  rgb_std:
+  - 0.229
+  - 0.224
+  - 0.225
+  frozen: true
+  renormalize_foreground: false
+  cache_stride: 16
+  cache_input_scale: 1.0
+  cache_dtype: uint8

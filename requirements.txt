@@ -1,0 +1,5 @@
+torch==1.12.0
+torchvision==0.13.0
+PyYAML>=6.0,<7
+numpy>=1.21,<2
+Pillow>=8,<11
